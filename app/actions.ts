@@ -199,7 +199,8 @@ export async function moveStep(formData: FormData) {
 async function pipelineOnce(
   accessToken: string,
   buffer: ArrayBuffer,
-  contentType: string
+  contentType: string,
+  humorFlavorId: number
 ) {
   const { presignedUrl, cdnUrl } = await generatePresignedUrl(
     accessToken,
@@ -207,7 +208,7 @@ async function pipelineOnce(
   );
   await putToPresignedUrl(presignedUrl, buffer, contentType);
   const { imageId } = await registerImageUrl(accessToken, cdnUrl);
-  const raw = await generateCaptions(accessToken, imageId);
+  const raw = await generateCaptions(accessToken, imageId, humorFlavorId);
   return { imageId, texts: captionTexts(raw) };
 }
 
@@ -226,7 +227,7 @@ export async function runPipelineUpload(formData: FormData) {
   const buf = await file.arrayBuffer();
   const ct = file.type || "image/jpeg";
 
-  const { imageId, texts } = await pipelineOnce(token, buf, ct);
+  const { imageId, texts } = await pipelineOnce(token, buf, ct, humorFlavorId);
   if (!texts.length)
     throw new Error("Pipeline returned no caption text (check API response)");
 
@@ -262,7 +263,7 @@ export async function runPipelineTestUrl(formData: FormData) {
   const buf = await res.arrayBuffer();
   const ct = res.headers.get("content-type")?.split(";")[0] || "image/jpeg";
 
-  const { imageId, texts } = await pipelineOnce(token, buf, ct);
+  const { imageId, texts } = await pipelineOnce(token, buf, ct, humorFlavorId);
   if (!texts.length)
     throw new Error("Pipeline returned no caption text (check API response)");
 

@@ -56,15 +56,21 @@ export async function registerImageUrl(
 
 export async function generateCaptions(
   token: string,
-  imageId: string
+  imageId: string,
+  humorFlavorId?: number
 ): Promise<unknown> {
+  const body: { imageId: string; humorFlavorId?: number } = { imageId };
+  if (typeof humorFlavorId === "number" && Number.isFinite(humorFlavorId)) {
+    body.humorFlavorId = humorFlavorId;
+  }
+
   const res = await fetch(`${base()}/pipeline/generate-captions`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ imageId }),
+    body: JSON.stringify(body),
   });
   return json(res);
 }
