@@ -91,6 +91,103 @@ export async function deleteFlavor(formData: FormData) {
   redirect("/flavors");
 }
 
+function normalizeSlug(input: string): string {
+  return input
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+async function buildUniqueFlavorSlug(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  requested: string
+) {
+  const base = normalizeSlug(requested) || "flavor-copy";
+  let candidate = base;
+  let i = 2;
+  while (true) {
+    const { data, error } = await supabase
+      .from("humor_flavors")
+      .select("id")
+      .eq("slug", candidate)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!data) return candidate;
+    candidate = `${base}-${i}`;
+    i += 1;
+  }
+}
+
+export async function duplicateFlavor(formData: FormData) {
+  const { supabase, user } = await requireAdmin();
+  const sourceFlavorId = Number(formData.get("id"));
+  const requestedSlug = String(formData.get("new_slug") ?? "").trim();
+
+  const { data: sourceFlavor, error: flavorError } = await supabase
+    .from("humor_flavors")
+    .select("id, slug, description, is_pinned")
+    .eq("id", sourceFlavorId)
+    .maybeSingle();
+  if (flavorError || !sourceFlavor) {
+    throw new Error(flavorError?.message ?? "Flavor not found");
+  }
+
+  const uniqueSlug = await buildUniqueFlavorSlug(
+    supabase,
+    requestedSlug || `${sourceFlavor.slug}-copy`
+  );
+
+  const { data: createdFlavor, error: createFlavorError } = await supabase
+    .from("humor_flavors")
+    .insert({
+      slug: uniqueSlug,
+      description: sourceFlavor.description,
+      is_pinned: false,
+      created_by_user_id: user.id,
+      modified_by_user_id: user.id,
+    })
+    .select("id")
+    .single();
+  if (createFlavorError || !createdFlavor) {
+    throw new Error(createFlavorError?.message ?? "Could not duplicate flavor");
+  }
+
+  const { data: sourceSteps, error: stepsError } = await supabase
+    .from("humor_flavor_steps")
+    .select(
+      "order_by, llm_temperature, llm_input_type_id, llm_output_type_id, llm_model_id, humor_flavor_step_type_id, llm_system_prompt, llm_user_prompt, description"
+    )
+    .eq("humor_flavor_id", sourceFlavorId)
+    .order("order_by", { ascending: true });
+  if (stepsError) throw new Error(stepsError.message);
+
+  if ((sourceSteps ?? []).length > 0) {
+    const rows = (sourceSteps ?? []).map((s) => ({
+      humor_flavor_id: createdFlavor.id,
+      order_by: s.order_by,
+      llm_temperature: s.llm_temperature,
+      llm_input_type_id: s.llm_input_type_id,
+      llm_output_type_id: s.llm_output_type_id,
+      llm_model_id: s.llm_model_id,
+      humor_flavor_step_type_id: s.humor_flavor_step_type_id,
+      llm_system_prompt: s.llm_system_prompt,
+      llm_user_prompt: s.llm_user_prompt,
+      description: s.description,
+      created_by_user_id: user.id,
+      modified_by_user_id: user.id,
+    }));
+    const { error: copyStepsError } = await supabase
+      .from("humor_flavor_steps")
+      .insert(rows);
+    if (copyStepsError) throw new Error(copyStepsError.message);
+  }
+
+  revalidatePath("/flavors");
+  revalidatePath(`/flavors/${sourceFlavorId}`);
+  redirect(`/flavors/${createdFlavor.id}`);
+}
+
 export async function createStep(formData: FormData) {
   const { supabase, user } = await requireAdmin();
   const humorFlavorId = Number(formData.get("humor_flavor_id"));

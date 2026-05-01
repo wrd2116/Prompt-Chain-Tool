@@ -4,6 +4,7 @@ import {
   createStep,
   deleteFlavor,
   deleteStep,
+  duplicateFlavor,
   moveStep,
   runPipelineTestUrl,
   runPipelineUpload,
@@ -96,6 +97,18 @@ export default async function FlavorDetailPage({
         <form action={deleteFlavor} style={{ marginTop: "1rem" }}>
           <input type="hidden" name="id" value={id} />
           <button type="submit">Delete flavor</button>
+        </form>
+        <form action={duplicateFlavor} style={{ marginTop: "1rem" }}>
+          <input type="hidden" name="id" value={id} />
+          <label>
+            Duplicate slug (optional)
+            <input
+              name="new_slug"
+              type="text"
+              placeholder={`${flavor.slug}-copy`}
+            />
+          </label>
+          <button type="submit">Duplicate flavor + steps</button>
         </form>
       </section>
 
