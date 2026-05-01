@@ -1,0 +1,120 @@
+:root {
+  --bg: #fafafa;
+  --fg: #111;
+  --muted: #555;
+  --border: #ddd;
+  --card: #fff;
+}
+
+[data-theme="dark"] {
+  --bg: #0c0c0c;
+  --fg: #f4f4f4;
+  --muted: #a3a3a3;
+  --border: #333;
+  --card: #161616;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0c0c0c;
+    --fg: #f4f4f4;
+    --muted: #a3a3a3;
+    --border: #333;
+    --card: #161616;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  line-height: 1.45;
+}
+
+a {
+  color: inherit;
+}
+
+input,
+textarea,
+select,
+button {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+label {
+  display: grid;
+  gap: 0.25rem;
+  margin-bottom: 0.65rem;
+  font-size: 0.875rem;
+}
+
+input[type="text"],
+input[type="number"],
+textarea {
+  width: 100%;
+  max-width: 40rem;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+}
+
+textarea {
+  min-height: 5rem;
+  resize: vertical;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.err {
+  color: #c00;
+  font-size: 0.875rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+th,
+td {
+  border: 1px solid var(--border);
+  padding: 0.35rem 0.5rem;
+  vertical-align: top;
+}
+
+th {
+  text-align: left;
+}
