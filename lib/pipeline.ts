@@ -59,19 +59,41 @@ export async function generateCaptions(
   imageId: string,
   humorFlavorId?: number
 ): Promise<unknown> {
-  const body: { imageId: string; humorFlavorId?: number } = { imageId };
-  if (typeof humorFlavorId === "number" && Number.isFinite(humorFlavorId)) {
-    body.humorFlavorId = humorFlavorId;
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    "Content-Type": "application/json",
+  };
+
+  async function request(body: { imageId: string; humorFlavorId?: number }) {
+    const res = await fetch(`${base()}/pipeline/generate-captions`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+    });
+    return res;
   }
 
-  const res = await fetch(`${base()}/pipeline/generate-captions`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
+  const withFlavor =
+    typeof humorFlavorId === "number" && Number.isFinite(humorFlavorId)
+      ? { imageId, humorFlavorId }
+      : null;
+
+  if (withFlavor) {
+    const first = await request(withFlavor);
+    if (first.ok) return json(first);
+
+    // Backward compatibility: some pipeline deployments still accept only imageId.
+    const fallback = await request({ imageId });
+    if (fallback.ok) return json(fallback);
+
+    const firstText = await first.text();
+    const fallbackText = await fallback.text();
+    throw new Error(
+      `generate-captions failed with and without humorFlavorId. first=${first.status}: ${firstText.slice(0, 300)} fallback=${fallback.status}: ${fallbackText.slice(0, 300)}`
+    );
+  }
+
+  const res = await request({ imageId });
   return json(res);
 }
 
