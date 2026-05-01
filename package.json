@@ -1,0 +1,5 @@
+{
+  "name": "prompt-chain-tool",
+  "private": true,
+  "description": "Documentation for prompt chaining (static site; no framework build)"
+}

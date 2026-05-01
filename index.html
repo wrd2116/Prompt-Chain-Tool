@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Prompt Chain Tool</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: canvas;
+        --fg: canvastext;
+        --muted: color-mix(in srgb, canvastext 65%, canvas);
+        --border: color-mix(in srgb, canvastext 18%, canvas);
+        --code-bg: color-mix(in srgb, canvastext 6%, canvas);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        line-height: 1.55;
+        color: var(--fg);
+        background: var(--bg);
+      }
+      main {
+        max-width: 52rem;
+        margin: 0 auto;
+        padding: 2rem 1.25rem 4rem;
+      }
+      h1,
+      h2,
+      h3 {
+        line-height: 1.25;
+      }
+      a {
+        color: inherit;
+      }
+      pre,
+      code {
+        font-family: ui-monospace, monospace;
+        font-size: 0.92em;
+        background: var(--code-bg);
+        border-radius: 6px;
+      }
+      pre {
+        padding: 0.85rem 1rem;
+        overflow-x: auto;
+        border: 1px solid var(--border);
+      }
+      code {
+        padding: 0.15em 0.4em;
+      }
+      pre code {
+        padding: 0;
+        background: none;
+        border-radius: 0;
+      }
+      blockquote {
+        margin: 0;
+        padding-left: 1rem;
+        border-left: 3px solid var(--border);
+        color: var(--muted);
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+      th,
+      td {
+        border: 1px solid var(--border);
+        padding: 0.5rem 0.65rem;
+        text-align: left;
+      }
+      .banner {
+        margin-bottom: 1.5rem;
+        font-size: 0.95rem;
+        color: var(--muted);
+      }
+      #content:empty::after {
+        content: "Loading instructions…";
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="banner">
+        <a href="./promptchaininstructions.md">Raw markdown</a>
+      </p>
+      <div id="content" aria-live="polite"></div>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+    <script>
+      (function () {
+        var el = document.getElementById("content");
+        fetch("./promptchaininstructions.md", { cache: "no-store" })
+          .then(function (r) {
+            if (!r.ok) throw new Error(r.status + " " + r.statusText);
+            return r.text();
+          })
+          .then(function (text) {
+            el.innerHTML = marked.parse(text);
+          })
+          .catch(function (err) {
+            el.innerHTML =
+              "<p>Could not load <code>promptchaininstructions.md</code>.</p><pre>" +
+              String(err.message || err) +
+              "</pre>";
+          });
+      })();
+    </script>
+  </body>
+</html>
