@@ -212,6 +212,24 @@ async function pipelineOnce(
   return { imageId, texts: captionTexts(raw) };
 }
 
+async function assertFlavorHasSteps(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  humorFlavorId: number
+) {
+  const { data, error } = await supabase
+    .from("humor_flavor_steps")
+    .select("id")
+    .eq("humor_flavor_id", humorFlavorId)
+    .limit(1);
+
+  if (error) throw new Error(error.message);
+  if (!data?.length) {
+    throw new Error(
+      "This humor flavor has no steps. Add at least one step before running the pipeline test."
+    );
+  }
+}
+
 export async function runPipelineUpload(formData: FormData) {
   const { supabase, user } = await requireAdmin();
   const {
@@ -221,6 +239,7 @@ export async function runPipelineUpload(formData: FormData) {
   if (!token) throw new Error("Missing session token");
 
   const humorFlavorId = Number(formData.get("humor_flavor_id"));
+  await assertFlavorHasSteps(supabase, humorFlavorId);
   const file = formData.get("file") as File | null;
   if (!file?.size) throw new Error("Choose an image file");
 
@@ -255,6 +274,7 @@ export async function runPipelineTestUrl(formData: FormData) {
   if (!token) throw new Error("Missing session token");
 
   const humorFlavorId = Number(formData.get("humor_flavor_id"));
+  await assertFlavorHasSteps(supabase, humorFlavorId);
   const url = String(formData.get("url") ?? "").trim();
   if (!url) throw new Error("Missing image URL");
 

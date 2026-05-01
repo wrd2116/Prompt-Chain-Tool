@@ -64,7 +64,12 @@ export async function generateCaptions(
     "Content-Type": "application/json",
   };
 
-  async function request(body: { imageId: string; humorFlavorId?: number }) {
+  async function request(body: {
+    imageId: string;
+    humorFlavorId?: number;
+    humor_flavor_id?: number;
+    flavorId?: number;
+  }) {
     const res = await fetch(`${base()}/pipeline/generate-captions`, {
       method: "POST",
       headers,
@@ -75,7 +80,12 @@ export async function generateCaptions(
 
   const withFlavor =
     typeof humorFlavorId === "number" && Number.isFinite(humorFlavorId)
-      ? { imageId, humorFlavorId }
+      ? {
+          imageId,
+          humorFlavorId,
+          humor_flavor_id: humorFlavorId,
+          flavorId: humorFlavorId,
+        }
       : null;
 
   if (withFlavor) {
